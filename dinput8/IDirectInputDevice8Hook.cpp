@@ -20,6 +20,9 @@ static GUID GUID_GamepadNVidiaShieldGameStream = {
 	0xECBB3D3D, 0xC2EA, 0x4861,{ 0x98, 0x3F, 0xB3, 0xE1, 0x5B, 0xDC, 0x6C, 0x52 }
 };
 
+static GUID GUID_GamepadSteamControllerProtonEmulatedX360 = {
+	0x001E36B7, 0x5DBA, 0x0000,{ 0xA8, 0xC9, 0xCF, 0xC8, 0x68, 0x9D, 0xB4, 0x03 }
+};
 // TODO Add your own known gamepad GUIDs here!
 
 IDirectInputDevice8Hook::IDirectInputDevice8Hook(IDirectInput8 * dinput, IDirectInputDevice8 * dinputdevice, REFGUID guid)
@@ -94,13 +97,13 @@ HRESULT STDMETHODCALLTYPE IDirectInputDevice8Hook::GetDeviceState(DWORD p0, LPVO
 		LPDIJOYSTATE state = (LPDIJOYSTATE)p1;
 
 		// Log device state (uncomment these lines if you need to capture the button values before remapping them)
-		WCHAR message[2048];
+		/*WCHAR message[2048];
 		wsprintf(message,
-			L"DIJOYSTATE:\n"
-			L"lRx = %u, lRy = %u, lRz = %u\n"
-			L"lX = %u, lY = %u, lZ = %u\n"
-			L"rgdwPOV[0] = %u, rgdwPOV[1] = %u, rgdwPOV[2] = %u, rgdwPOV[3] = %u\n"
-			L"rglSlider[0] = %u, rglSlider[1] = %u\n"
+			//L"DIJOYSTATE:\n"
+			L"lRx = %ld, lRy = %ld, lRz = %ld\n"
+			L"lX = %ld, lY = %ld, lZ = %ld\n"
+			L"rgdwPOV[0] = %d, rgdwPOV[1] = %d, rgdwPOV[2] = %d, rgdwPOV[3] = %d\n"
+			L"rglSlider[0] = %ld, rglSlider[1] = %ld\n"
 			L"rgbButtons[0] = %u, rgbButtons[1] = %u, rgbButtons[2] = %u, rgbButtons[3] = %u\n"
 			L"rgbButtons[4] = %u, rgbButtons[5] = %u, rgbButtons[6] = %u, rgbButtons[7] = %u\n"
 			L"rgbButtons[8] = %u, rgbButtons[9] = %u, rgbButtons[10] = %u, rgbButtons[11] = %u\n"
@@ -111,7 +114,7 @@ HRESULT STDMETHODCALLTYPE IDirectInputDevice8Hook::GetDeviceState(DWORD p0, LPVO
 			L"rgbButtons[28] = %u, rgbButtons[29] = %u, rgbButtons[30] = %u, rgbButtons[31] = %u\n",
 			state->lRx, state->lRy, state->lRz,
 			state->lX, state->lY, state->lZ,
-			state->rgdwPOV[0], state->rgdwPOV[1], state->rgdwPOV[2], state->rgbButtons[3],
+			state->rgdwPOV[0], state->rgdwPOV[1], state->rgdwPOV[2], state->rgdwPOV[3],
 			state->rglSlider[0], state->rglSlider[1],
 			state->rgbButtons[0], state->rgbButtons[1], state->rgbButtons[2], state->rgbButtons[3],
 			state->rgbButtons[4], state->rgbButtons[5], state->rgbButtons[6], state->rgbButtons[7],
@@ -122,91 +125,40 @@ HRESULT STDMETHODCALLTYPE IDirectInputDevice8Hook::GetDeviceState(DWORD p0, LPVO
 			state->rgbButtons[24], state->rgbButtons[25], state->rgbButtons[26], state->rgbButtons[26],
 			state->rgbButtons[28], state->rgbButtons[29], state->rgbButtons[30], state->rgbButtons[31]);
 		OutputDebugString(message);
-
+		
 		// Log gamepad GUID (uncomment these lines if you need to capture your gamepad GUID)
 		wsprintf(message, L"Gamepad GUID: {%08X-%04X-%04X-%02X%02X-%02X%02X%02X%02X%02X%02X}\n", m_GUID.Data1, m_GUID.Data2, m_GUID.Data3, m_GUID.Data4[0], m_GUID.Data4[1], m_GUID.Data4[2], m_GUID.Data4[3], m_GUID.Data4[4], m_GUID.Data4[5], m_GUID.Data4[6], m_GUID.Data4[7]);
 		OutputDebugString(message);
 
-		// Fix DragonRise controls
-		if (IsEqualGUID(m_GUID, GUID_GamepadDragonRiseTwinShock))
-		{
-			// Temporary byte variable
-			BYTE tmp[2];
+		if (IsEqualGUID(m_GUID, GUID_GamepadSteamControllerProtonEmulatedX360))
+		{*/
+		// Configuration for the Steam Controller under Proton
 
-			// Square from 3 to 0
-			tmp[0] = state->rgbButtons[0];
-			state->rgbButtons[0] = state->rgbButtons[3];
+		// Swap triggers with right analog stick
+		// Also need to invert the values
+		// lRz -> Right trigger
+		// lZ -> Left trigger
+		// lRx, lRy -> Right analog stick
+		LONG tmp = -state->lRx;
+		state->lRx = state->lZ;
+		state->lZ = tmp;
 
-			// Triangle from 0 to 1
-			tmp[1] = state->rgbButtons[1];
-			state->rgbButtons[1] = tmp[0];
+		tmp = -state->lRy;
+		state->lRy = state->lRz;
+		state->lRz = tmp;
 
-			// Circle from 1 to 3
-			state->rgbButtons[3] = tmp[1];
+		// Fix buttons
+		//BYTE tmpb = state->rgbButtons[4];
+		// Fix Start
+		state->rgbButtons[8] = state->rgbButtons[7];
+		// Fix X and Y
+		state->rgbButtons[4] = state->rgbButtons[3];
+		state->rgbButtons[3] = state->rgbButtons[2];
+		// Fix triggers
+		state->rgbButtons[6] = state->lRy > -10 ? 128 : 0;
+		state->rgbButtons[7] = state->lRx > -10 ? 128 : 0;
+		//}
 
-			// Swap start (9) and R3 (11)
-			state->rgbButtons[11] = state->rgbButtons[11] ^ state->rgbButtons[9];
-			state->rgbButtons[9] = state->rgbButtons[11] ^ state->rgbButtons[9];
-			state->rgbButtons[11] = state->rgbButtons[11] ^ state->rgbButtons[9];
-
-			// Swap select (8) and L3 (10)
-			state->rgbButtons[10] = state->rgbButtons[10] ^ state->rgbButtons[8];
-			state->rgbButtons[8] = state->rgbButtons[10] ^ state->rgbButtons[8];
-			state->rgbButtons[10] = state->rgbButtons[10] ^ state->rgbButtons[8];
-
-			// Swap L1 (6) and L2 (4)
-			state->rgbButtons[4] = state->rgbButtons[4] ^ state->rgbButtons[6];
-			state->rgbButtons[6] = state->rgbButtons[4] ^ state->rgbButtons[6];
-			state->rgbButtons[4] = state->rgbButtons[4] ^ state->rgbButtons[6];
-
-			// Swap R1 (7) and R2 (5)
-			state->rgbButtons[5] = state->rgbButtons[5] ^ state->rgbButtons[7];
-			state->rgbButtons[7] = state->rgbButtons[5] ^ state->rgbButtons[7];
-			state->rgbButtons[5] = state->rgbButtons[5] ^ state->rgbButtons[7];
-		}
-
-		// Fix Xbox360 / XBoxOne controls (Steam In-Home Streaming and NVidia GameStream both simulate different versions of this controller!)
-		else if (IsEqualGUID(m_GUID, GUID_GamepadXbox360WirelessSteam) || IsEqualGUID(m_GUID, GUID_GamepadNVidiaShieldGameStream) ||IsEqualGUID(m_GUID, GUID_GamepadXboxOneWired))
-		{
-			// Swap A and X button presses to match the expected button number
-			state->rgbButtons[0] = state->rgbButtons[0] ^ state->rgbButtons[2];
-			state->rgbButtons[2] = state->rgbButtons[0] ^ state->rgbButtons[2];
-			state->rgbButtons[0] = state->rgbButtons[0] ^ state->rgbButtons[2];
-
-			// Swap B and Y button presses to match the expected button number
-			state->rgbButtons[1] = state->rgbButtons[1] ^ state->rgbButtons[3];
-			state->rgbButtons[3] = state->rgbButtons[1] ^ state->rgbButtons[3];
-			state->rgbButtons[1] = state->rgbButtons[1] ^ state->rgbButtons[3];
-
-			// Translate back button presses
-			state->rgbButtons[10] = state->rgbButtons[6];
-
-			// Translate start button presses
-			state->rgbButtons[11] = state->rgbButtons[7];
-
-			// Translate L2 trigger presses
-			state->rgbButtons[6] = state->lZ >= 0 && state->lZ <= 126 ? 128 : 0;
-
-			// Translate R2 trigger presses
-			state->rgbButtons[7] = state->lZ >= -128 && state->lZ <= -2 ? 128 : 0;
-
-			// Translate horizontal axis of the right analog stick
-			state->lZ = state->lRx;
-
-			// Translate vertical axis of the right analog stick
-			state->lRz = state->lRy;
-		}
-
-		/*
-		// TODO This is where you would add additional controller mappings!
-		else if (IsEqualGUID(m_GUID, GUID_GamepadYourNewShinyGamepadThatDoesntWorkRightYet))
-		{
-			// Remap the buttons here!
-		}
-		*/
-
-		// Hold the space button for as long as the start button is pressed (this game has no way of skipping through cutscenes via gamepad, it's ridiculous)
-		mSpaceKeyState = state->rgbButtons[11] != 0;
 	}
 
 	return hResult;

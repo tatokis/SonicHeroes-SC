@@ -16,7 +16,7 @@
 
 #include <stdio.h>
 #include <Psapi.h>
-#include <detours.h>
+#include "detours.h"
 
 
 // TODO: reference additional headers your program requires here
