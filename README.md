@@ -1,16 +1,29 @@
-# steamy dinput8.dll proxy
-This is a simple dinput8.dll proxy library that hooks direct input, as well as Steam's own direct input hook (hookception!).
+A simple dinput8.dll proxy that remaps the Steam Controller in Sonic Heroes to fix the rotating camera bug when ran in wine (proton), as well as the button mapping.
+This is a fork of https://github.com/MrColdbird/SW42-SteamGamepadFix
 
-After hooking said functions, it then identifies a set of known controller GUIDs against a re-mapping list, allowing one to remap controls in games that don't support proper remapping themselves.
+# Usage
 
-In addition to that, it can simulate keyboard key presses.
+## Linux
 
-This project was initially made to fix the horrible button mapping that KOEI bitch-slapped us with in the PC version of Samurai Warriors 4-2, which rendered pretty much every XInput-based gamepad in existence broken (including the official Xbox360 controllers).
-The code also contains a keyboard button mapping for the gamepad's start button, linking it to the space key, so that one can skip cutscenes without having to have a physical keyboard available at all times.
+Copy dinput8.dll from the binaries folder to the game's installation directory (same place as Tsonic_win.exe).
+Identify the proton/wine prefix directory and run winecfg in it. For example:
 
-This code is however, flexible enough, to act as a generic direct input button remapper for pretty much every game that uses it.
-It also serves as a proof of concept for XInput <-> Direct Input button mapping scheme modification, and thus, is to be seen as the other side of tools like Xbox 360 Controller Emulator, which does the opposite.
+```
+WINEPREFIX="/home/user/.steam/steamapps/compatdata/NNNNNNNNNN/pfx/" winecfg
+```
 
-# How to use it?
-Place the dinput8.dll from the binaries subdirectory in your 32bit-based game's application folder, and then copy your operating systems 32bit dinput8.dll, renamed as dinput8base.dll, into your game's application folder.
-You can find your operating system's original dinput8.dll in either the C:\Windows\System32 folder (on a 32bit operating system) or in the C:\Windows\SysWoW64 folder (on a 64bit operating system).
+Under libraries, add a new override for "dinput8", and set it to `native` only. Click OK.
+Next, go to proton's dll path and add a symlink for dinput8base.dll.so. (Newer wine versions may only have dll files. This was tested against Proton 4.2.)
+
+```
+cd ~/.steam/compatibilitytools.d/Proton_4.2_noesync/dist/lib/wine
+ln -s dinput8.dll.so dinput8base.dll.so
+```
+
+## Windows (untested)
+
+Copy dinput8.dll from the system directory to the game's installation directory (same place as Tsonic_win.exe).
+The system directory is C:\Windows\SysWoW64 for 64 bit Windows, and C:\Windows\System32 for 32 bit.
+Rename the copied file (in the game directory) to dinput8base.dll
+
+Copy dinput8.dll from the binaries folder in this reposity to the game's installation directory (same place as Tsonic_win.exe).
