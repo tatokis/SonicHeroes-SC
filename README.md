@@ -26,4 +26,4 @@ Copy dinput8.dll from the system directory to the game's installation directory 
 The system directory is C:\Windows\SysWoW64 for 64 bit Windows, and C:\Windows\System32 for 32 bit.
 Rename the copied file (in the game directory) to dinput8base.dll
 
-Copy dinput8.dll from the binaries folder in this reposity to the game's installation directory (same place as Tsonic_win.exe).
+Copy dinput8.dll from the binaries folder in this repository to the game's installation directory (same place as Tsonic_win.exe).
